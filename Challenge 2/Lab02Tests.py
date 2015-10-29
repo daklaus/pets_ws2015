@@ -15,6 +15,7 @@ import pytest
 from pytest import raises
 
 @pytest.mark.task1
+@pytest.mark.grade(points=0)
 def test_petlib_present():
     """
     Try to import Petlib and pytest to ensure they are 
@@ -26,6 +27,7 @@ def test_petlib_present():
     assert True
 
 @pytest.mark.task1
+@pytest.mark.grade(points=0)
 def test_code_present():
     """
     Try to import the code file. 
@@ -62,6 +64,7 @@ def encode_Alice_message():
     return private_key, m1
 
 @pytest.mark.task2
+@pytest.mark.grade(points=1)
 def test_Alice_message_overlong():
     """
     Test overlong address or message
@@ -82,8 +85,8 @@ def test_Alice_message_overlong():
     with raises(Exception) as excinfo:
         mix_client_one_hop(public_key, b"Alice", urandom(10000))
 
-
 @pytest.mark.task2
+@pytest.mark.grade(points=1)
 def test_simple_client_part_type(encode_Alice_message):
     private_key, Alice_message = encode_Alice_message
     
@@ -96,6 +99,7 @@ def test_simple_client_part_type(encode_Alice_message):
     assert Alice_message.message
 
 @pytest.mark.task2
+@pytest.mark.grade(points=1)
 def test_simple_client_decode(encode_Alice_message):
     private_key, Alice_message = encode_Alice_message
 
@@ -107,6 +111,7 @@ def test_simple_client_decode(encode_Alice_message):
     assert res1[0][1] == b"Dear Alice,\nHello!\nBob"
 
 @pytest.mark.task2
+@pytest.mark.grade(points=1)
 def test_simple_client_decode_many():
     
     from os import urandom
@@ -134,6 +139,7 @@ def test_simple_client_decode_many():
 from Lab02Code import mix_server_n_hop, mix_client_n_hop
 
 @pytest.mark.task3
+@pytest.mark.grade(points=2)
 def test_Alice_encode_1_hop():
     """
     Test sending a multi-hop message through 1-hop
@@ -159,18 +165,22 @@ def test_Alice_encode_1_hop():
     assert out[0][1] == message
 
 @pytest.mark.task3
+@pytest.mark.grade(points=2)
 def test_Alice_encode_3_hop_wo_blinding_factor():
     execute_Alice_encode_hop(3)
 
 @pytest.mark.task3
+@pytest.mark.grade(points=2)
 def test_Alice_encode_10_hop_wo_blinding_factor():
     execute_Alice_encode_hop(10)
     
 @pytest.mark.task3_bonus
+@pytest.mark.grade(points=1)
 def test_bonus_Alice_encode_3_hop_w_blinding_factor():
     execute_Alice_encode_hop(3, use_blinding_factor=True)
     
 @pytest.mark.task3_bonus
+@pytest.mark.grade(points=2)
 def test_bonus_Alice_encode_10_hop_w_blinding_factor():
     execute_Alice_encode_hop(10, use_blinding_factor=True)
 
@@ -212,6 +222,7 @@ from Lab02Code import generate_trace, analyze_trace
 import random
 
 @pytest.mark.task4
+@pytest.mark.grade(points=2)
 def test_trace_static():
     # A fixed set and number of friends
     trace = generate_trace(100, 10, 1000, [1,2,3])
@@ -220,6 +231,7 @@ def test_trace_static():
     assert sorted(friends) == [1,2,3]
 
 @pytest.mark.task4
+@pytest.mark.grade(points=3)
 def test_trace_variable():
     # A random number of friends and random contacts
     friend_number = random.choice(range(1,10))
