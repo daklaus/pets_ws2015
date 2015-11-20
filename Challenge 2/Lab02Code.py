@@ -202,6 +202,9 @@ def mix_server_n_hop(private_key, message_list, use_blinding_factor=False, final
         shared_element = private_key * msg.ec_public_key
         key_material = sha512(shared_element.export()).digest()
 
+        print "\nkey server: %s\n" % shared_element
+        print "\nmsg server: %s\n" % msg.message[:20]
+
         # Use different parts of the shared key for different operations
         hmac_key = key_material[:16]
         address_key = key_material[16:32]
@@ -224,6 +227,8 @@ def mix_server_n_hop(private_key, message_list, use_blinding_factor=False, final
         h.update(msg.message)
 
         expected_mac = h.digest()
+
+        print "\nhmac server: %s" % msg.hmacs[0]
 
         if not secure_compare(msg.hmacs[0], expected_mac[:20]):
             raise Exception("HMAC check failure")
@@ -286,7 +291,60 @@ def mix_client_n_hop(public_keys, address, message, use_blinding_factor=False):
     private_key = G.order().random()
     client_public_key  = private_key * G.generator()
 
-    #TODO ADD CODE HERE
+    address_cipher = address_plaintext
+    message_cipher = message_plaintext
+
+    hmacs = []
+
+    for public_key in reversed(public_keys):
+        ## First get a shared key
+        shared_element = private_key * public_key
+        key_material = sha512(shared_element.export()).digest()
+
+        print "\nkey client: %s\n" % shared_element
+
+        # Use different parts of the shared key for different operations
+        hmac_key = key_material[:16]
+        address_key = key_material[16:32]
+        message_key = key_material[32:48]
+
+        ## Encrypt the address and the message
+        iv = b"\x00"*16
+
+        address_cipher = aes_ctr_enc_dec(address_key, iv, address_cipher)
+        message_cipher = aes_ctr_enc_dec(message_key, iv, message_cipher)
+
+        print "\nmsg client: %s\n" % message_cipher[:20]
+
+        # Encrypt hmacs
+        new_hmacs = []
+        for i, previous_mac in enumerate(reversed(hmacs)):
+            # Ensure the IV is different for each hmac
+            iv = pack("H14s", i, b"\x00"*14)
+
+            hmac_cipher = aes_ctr_enc_dec(hmac_key, iv, previous_mac)
+            new_hmacs += [hmac_cipher]
+
+        # Write the new encrypted hmacs back to the list
+        hmacs = list(reversed(new_hmacs))
+
+        ## Calculate the HMAC
+        h = Hmac(b"sha512", hmac_key)
+
+        for previous_mac in reversed(hmacs):
+            h.update(previous_mac)
+
+        h.update(address_cipher)
+        h.update(message_cipher)
+
+        expected_mac = h.digest()
+        expected_mac = expected_mac[:20]
+
+        hmacs += [expected_mac]
+
+        print "\nhmac client: %s\n" % expected_mac
+
+    hmacs.reverse()
 
     return NHopMixMessage(client_public_key, hmacs, address_cipher, message_cipher)
 
